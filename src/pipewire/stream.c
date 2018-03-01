@@ -1048,7 +1048,8 @@ static void client_node_port_set_io(void *data,
 
 	if (id == t->io.Buffers) {
 		impl->io = ptr;
-		pw_log_debug("stream %p: set io id %u %p", stream, id, ptr);
+		pw_log_debug("stream %p: %u.%u set io id %u %p", stream,
+				port_id, mix_id, id, ptr);
 	}
 
 	res = 0;

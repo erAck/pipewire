@@ -138,7 +138,7 @@ struct impl {
 	struct pw_client_node_transport *transport;
 
 	struct pw_memblock *io_areas;
-	struct mem *io_mem;
+	uint32_t io_memid;
 
 	struct spa_hook node_listener;
 	struct spa_hook resource_listener;
@@ -1122,6 +1122,7 @@ static void node_initialized(void *data)
 	struct pw_client_node *this = &impl->this;
 	struct pw_node *node = this->node;
 	struct pw_type *t = impl->t;
+	struct mem *m;
 
 	if (this->resource == NULL)
 		return;
@@ -1143,7 +1144,8 @@ static void node_initialized(void *data)
 			      &impl->io_areas) < 0)
                 return;
 
-	impl->io_mem = ensure_mem(impl, impl->io_areas->fd, t->data.MemFd, impl->io_areas->flags);
+	m = ensure_mem(impl, impl->io_areas->fd, t->data.MemFd, impl->io_areas->flags);
+	impl->io_memid = m->id;
 
 	pw_client_node_resource_transport(this->resource,
 					  pw_global_get_id(pw_node_get_global(node)),
