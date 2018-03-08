@@ -615,11 +615,12 @@ static int do_port_set_io(struct impl *impl,
 		if ((mem = pw_memblock_find(data)) == NULL)
 			return -EINVAL;
 
-		mem_offset = mem->offset;
+		mem_offset = SPA_PTRDIFF(data, mem->ptr);
 		mem_size = mem->size;
 		if (mem_size - mem_offset < size)
 			return -EINVAL;
 
+		mem_offset += mem->offset;
 		m = ensure_mem(impl, mem->fd, t->data.MemFd, mem->flags);
 		memid = m->id;
 	}
@@ -954,7 +955,7 @@ client_node_done(void *data, int seq, int res)
 	struct impl *impl = data;
 	struct node *this = &impl->node;
 
-	if (seq == 0 && res == 0)
+	if (seq == 0 && res == 0 && impl->transport == NULL)
 		setup_transport(impl);
 
 	this->callbacks->done(this->callbacks_data, seq, res);
@@ -1133,6 +1134,8 @@ node_init(struct node *this,
 	this->data_source.mask = SPA_IO_IN | SPA_IO_ERR | SPA_IO_HUP;
 	this->data_source.rmask = 0;
 
+	this->seq = 1;
+
 	return SPA_RESULT_RETURN_ASYNC(this->seq++);
 }
 
@@ -1293,7 +1296,7 @@ static void node_port_added(void *data, struct pw_port *port)
 {
 	struct impl *impl = data;
 
-	pw_log_debug("client-node %p: port added", &impl->this);
+	pw_log_debug("client-node %p: port %p added", &impl->this, port);
 	port->mix_node.port_set_io = mix_port_set_io;
 	port->mix_node.process_input = mix_port_process_input;
 	port->mix_node.process_output = mix_port_process_output;
